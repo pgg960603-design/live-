@@ -1,8 +1,13 @@
 {
   "name": "live-ranking-board-v2",
-  "version": "2.0.0",
+  "version": "3.4.0",
   "private": true,
-  "scripts": {"dev":"next dev","build":"next build","start":"next start","lint":"next lint"},
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
   "dependencies": {
     "@sparticuz/chromium": "^123.0.1",
     "@supabase/supabase-js": "^2.57.4",
@@ -12,5 +17,10 @@
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
-  "devDependencies": {"@types/node":"^22.10.2","@types/react":"^19.0.3","@types/react-dom":"^19.0.2","typescript":"^5.7.2"}
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.3",
+    "@types/react-dom": "^19.0.2",
+    "typescript": "^5.7.2"
+  }
 }

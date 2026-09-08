@@ -1,5 +1,23 @@
 import {NextRequest,NextResponse} from 'next/server';
-import {createClient} from '@supabase/supabase-js';
-function admin(){const u=process.env.NEXT_PUBLIC_SUPABASE_URL;const k=process.env.SUPABASE_SERVICE_ROLE_KEY;return u&&k?createClient(u,k,{auth:{persistSession:false}}):null}
-export async function GET(req:NextRequest){const board=req.nextUrl.searchParams.get('board');if(!board)return NextResponse.json({ok:false},{status:400});const db=admin();if(!db)return NextResponse.json({ok:true,settings:null});const {data,error}=await db.from('ranking_boards').select('settings').eq('board',board).maybeSingle();return error?NextResponse.json({ok:false,error:error.message},{status:500}):NextResponse.json({ok:true,settings:data?.settings??null})}
-export async function PUT(req:NextRequest){const body=await req.json();if(body.key!==(process.env.ADMIN_KEY||'change-me'))return NextResponse.json({ok:false},{status:401});const db=admin();if(!db)return NextResponse.json({ok:false,error:'Supabase server env missing'},{status:503});const {error}=await db.from('ranking_boards').upsert({board:body.board,settings:body.settings,updated_at:new Date().toISOString()},{onConflict:'board'});return error?NextResponse.json({ok:false,error:error.message},{status:500}):NextResponse.json({ok:true})}
+import {readBoard,writeBoard} from '@/lib/stateStore';
+export const dynamic='force-dynamic';
+export const runtime='nodejs';
+export const preferredRegion='icn1';
+const noStore={'Cache-Control':'no-store, no-cache, must-revalidate'};
+export async function GET(req:NextRequest){
+ const board=req.nextUrl.searchParams.get('board');
+ if(!board)return NextResponse.json({ok:false,error:'board required'},{status:400,headers:noStore});
+ const out=await readBoard(board);
+ if(!out.ok){console.error('[state GET]',board,out.error);return NextResponse.json({ok:false,settings:null,sync:false,error:out.error},{status:out.status,headers:noStore});}
+ return NextResponse.json({ok:true,settings:out.settings,sync:true},{headers:noStore});
+}
+export async function PUT(req:NextRequest){
+ try{
+  const body=await req.json();
+  if(body.key!==(process.env.ADMIN_KEY||'change-me'))return NextResponse.json({ok:false,error:'관리키가 올바르지 않습니다.'},{status:401,headers:noStore});
+  if(!body.board||!body.settings)return NextResponse.json({ok:false,error:'board/settings required'},{status:400,headers:noStore});
+  const out=await writeBoard(body.board,body.settings);
+  if(!out.ok){console.error('[state PUT]',body.board,out.error);return NextResponse.json({ok:false,error:out.error},{status:out.status,headers:noStore});}
+  return NextResponse.json({ok:true},{headers:noStore});
+ }catch(e:any){console.error('[state PUT parse]',e);return NextResponse.json({ok:false,error:e?.message||'invalid request'},{status:400,headers:noStore});}
+}

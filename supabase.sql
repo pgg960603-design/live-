@@ -5,6 +5,5 @@ create table if not exists public.ranking_boards (
 );
 alter table public.ranking_boards enable row level security;
 drop policy if exists "ranking read" on public.ranking_boards;
-drop policy if exists "ranking write" on public.ranking_boards;
 create policy "ranking read" on public.ranking_boards for select using (true);
-alter publication supabase_realtime add table public.ranking_boards;
+create unique index if not exists ranking_boards_board_uidx on public.ranking_boards(board);
